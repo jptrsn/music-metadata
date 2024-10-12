@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Track Matches</title>
+    <style>
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        table, th, td {
+            border: 1px solid black;
+        }
+        th, td {
+            padding: 8px;
+            text-align: left;
+        }
+    </style>
+    <script>
+        // JavaScript to automatically submit the form when dropdown changes
+        function applyFilter() {
+            document.getElementById('filterForm').submit();
+        }
+    </script>
+</head>
+<body>
+    <h1>Track Matches</h1>
+    
+    <!-- Filter Form -->
+    <form id="filterForm" method="POST" action="/">
+        <label for="artist">Artist:</label>
+        <select name="artist" id="artist" onchange="applyFilter()">
+            <option value="">--Select Artist--</option>
+            {% for artist in artists %}
+            <option value="{{ artist.Artist }}" {% if artist.Artist == selected_artist %}selected{% endif %}>{{ artist.Artist }}</option>
+            {% endfor %}
+        </select>
+        
+        <label for="album">Album:</label>
+        <select name="album" id="album" onchange="applyFilter()">
+            <option value="">--Select Album--</option>
+            {% for album in albums %}
+            <option value="{{ album.Album }}" {% if album.Album == selected_album %}selected{% endif %}>{{ album.Album }}</option>
+            {% endfor %}
+        </select>
+    </form>
+    
+    <!-- Matched Tracks Table -->
+    <h2>Matched Tracks</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>iTunes Track Name</th>
+                <th>iTunes Artist</th>
+                <th>iTunes Album</th>
+                <th>Owntone Track Name</th>
+                <th>Owntone Artist</th>
+                <th>Owntone Album</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for match in matches %}
+            <tr>
+                <td>{{ match['itunes_track_name'] }}</td>
+                <td>{{ match['itunes_artist'] }}</td>
+                <td>{{ match['itunes_album'] }}</td>
+                <td>{{ match['owntone_track_name'] }}</td>
+                <td>{{ match['owntone_artist'] }}</td>
+                <td>{{ match['owntone_album'] }}</td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="6">No matches found</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</body>
+</html>

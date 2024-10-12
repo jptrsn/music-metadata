@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Incorrect Tracks</title>
+    <style>
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        table, th, td {
+            border: 1px solid black;
+        }
+        th, td {
+            padding: 8px;
+            text-align: left;
+        }
+    </style>
+</head>
+<body>
+    <h1>Incorrect Tracks</h1>
+    
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Current Artist</th>
+                <th>Current Album</th>
+                <th>Current Track Title</th>
+                <th>Parsed Artist</th>
+                <th>Parsed Album</th>
+                <th>Parsed Title</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for track in incorrect_tracks %}
+            <tr>
+                <td>{{ track.id }}</td>
+                <td>{{ track.artist }}</td>
+                <td>{{ track.album }}
+                    <form method="POST" action="{{ url_for('mark_album_fixed') }}">
+                        <input type="hidden" name="track_id" value="{{ track.id }}">
+                        <button type="submit">Mark as Fixed</button>
+                    </form>
+                </td>
+                <td>{{ track.title }}</td>
+                <td>{{ track.parsed_artist }}</td>
+                <td>{{ track.parsed_album or 'N/A' }}</td>
+                <td>{{ track.parsed_title }}</td>
+                <td>
+                    <form method="POST" action="/incorrect-tracks">
+                        <input type="hidden" name="track_id" value="{{ track.id }}">
+                        <input type="text" name="updated_artist" placeholder="New Artist" value="{{ track.parsed_artist }}">
+                        <input type="text" name="updated_album" placeholder="New Album" value="{{ track.parsed_album }}">
+                        <input type="text" name="updated_title" placeholder="New Title" value="{{ track.parsed_title }}">
+                        <button type="submit">Update</button>
+                    </form>
+                    <form method="POST" action="{{ url_for('mark_track_fixed') }}">
+                        <input type="hidden" name="track_id" value="{{ track.id }}">
+                        <button type="submit">Mark as Fixed</button>
+                    </form>
+                </td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="8">No incorrect tracks found</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</body>
+</html>
