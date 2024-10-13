@@ -1,0 +1,203 @@
+<!-- <!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Unmatched Tracks</title>
+    <script>
+        function linkTracks(itunesTrackId, owntoneTrackId) {
+            // Submit the form to link the tracks
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = '/link_tracks';  // Update with your actual route
+
+            const itunesInput = document.createElement('input');
+            itunesInput.type = 'hidden';
+            itunesInput.name = 'itunes_track_id';
+            itunesInput.value = itunesTrackId;
+
+            const owntoneInput = document.createElement('input');
+            owntoneInput.type = 'hidden';
+            owntoneInput.name = 'owntone_track_id';
+            owntoneInput.value = owntoneTrackId;
+
+            form.appendChild(itunesInput);
+            form.appendChild(owntoneInput);
+            document.body.appendChild(form);
+            console.log('itunes id', itunesTrackId, 'owntoneId', owntoneTrackId)
+            form.submit();
+        }
+
+        function handleLinkButtonClick(row) {
+            const select = row.querySelector('select');  // Get the select element in the row
+            const selectedValue = select.value;          // Get the selected option value
+
+            if (selectedValue) {
+                // Call the linkTracks function with the appropriate IDs
+                const itunesTrackId = row.getAttribute('data-itunes-track-id');
+                linkTracks(itunesTrackId, selectedValue);
+            } else {
+                alert('Please select a match before linking.');
+            }
+        }
+    </script>
+</head>
+<body>
+    <h1>Unmatched Tracks</h1>
+    <table>
+        <thead>
+            <tr>
+                <th>Track Name</th>
+                <th>Artist</th>
+                <th>Album</th>
+                <th>Matches</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for unmatched in unmatched_tracks %}
+                <tr data-itunes-track-id="{{ unmatched.track_id }}">
+                    <td>{{ unmatched.title }}</td>
+                    <td>{{ unmatched.artist }}</td>
+                    <td>{{ unmatched.album }}</td>
+                    <td>
+                        <select name="matched_track_id_{{ loop.index }}">
+                            <option value="">Select a match</option>
+                            {% for match in unmatched.matches %}
+                                <option value="{{ match.id }}">{{ match.title }} by {{ match.artist }} ({{match.album}})</option>
+                            {% endfor %}
+                        </select>
+                    </td>
+                    <td>
+                        <button type="button" onclick="handleLinkButtonClick(this.closest('tr'))">Link</button>
+                    </td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</body>
+</html> -->
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Unmatched Tracks</title>
+    <script>
+        function linkTracks(itunesTrackId, owntoneTrackId) {
+            // Submit the form to link the tracks
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = '/link_tracks';  // Update with your actual route
+
+            const itunesInput = document.createElement('input');
+            itunesInput.type = 'hidden';
+            itunesInput.name = 'itunes_track_id';
+            itunesInput.value = itunesTrackId;
+
+            const owntoneInput = document.createElement('input');
+            owntoneInput.type = 'hidden';
+            owntoneInput.name = 'owntone_track_id';
+            owntoneInput.value = owntoneTrackId;
+
+            form.appendChild(itunesInput);
+            form.appendChild(owntoneInput);
+            document.body.appendChild(form);
+            console.log('itunes id', itunesTrackId, 'owntoneId', owntoneTrackId)
+            form.submit();
+        }
+
+        function handleLinkButtonClick(row) {
+            const select = row.querySelector('select');  // Get the select element in the row
+            const selectedValue = select.value;          // Get the selected option value
+
+            if (selectedValue) {
+                // Call the linkTracks function with the appropriate IDs
+                const itunesTrackId = row.getAttribute('data-itunes-track-id');
+                linkTracks(itunesTrackId, selectedValue);
+            } else {
+                alert('Please select a match before linking.');
+            }
+        }
+
+        function submitAllLinks() {
+            const rows = document.querySelectorAll('tbody tr');
+            const selectedTracks = [];
+
+            rows.forEach(row => {
+                const select = row.querySelector('select');
+                const selectedValue = select.value;
+
+                if (selectedValue) {
+                    const itunesTrackId = row.getAttribute('data-itunes-track-id');
+                    selectedTracks.push({ itunesTrackId, owntoneTrackId: selectedValue });
+                }
+            });
+
+            if (selectedTracks.length > 0) {
+                // Create a form to submit selected tracks
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = '/link_tracks';  // Update with your actual route
+
+                selectedTracks.forEach(track => {
+                    const itunesInput = document.createElement('input');
+                    itunesInput.type = 'hidden';
+                    itunesInput.name = 'itunes_track_id[]';  // Use array syntax for multiple values
+                    itunesInput.value = track.itunesTrackId;
+
+                    const owntoneInput = document.createElement('input');
+                    owntoneInput.type = 'hidden';
+                    owntoneInput.name = 'owntone_track_id[]';  // Use array syntax for multiple values
+                    owntoneInput.value = track.owntoneTrackId;
+
+                    form.appendChild(itunesInput);
+                    form.appendChild(owntoneInput);
+                });
+
+                document.body.appendChild(form);
+                form.submit();
+            } else {
+                alert('Please select at least one track before submitting.');
+            }
+        }
+    </script>
+</head>
+<body>
+    <h1>Unmatched Tracks</h1>
+    <button onclick="submitAllLinks()">Link Selected Tracks</button>
+    <table>
+        <thead>
+            <tr>
+                <th>Track Name</th>
+                <th>Artist</th>
+                <th>Album</th>
+                <th>Matches</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for unmatched in unmatched_tracks %}
+                <tr data-itunes-track-id="{{ unmatched.track_id }}">
+                    <td>{{ unmatched.title }}</td>
+                    <td>{{ unmatched.artist }}</td>
+                    <td>{{ unmatched.album }}</td>
+                    <td>
+                        <select name="matched_track_id_{{ loop.index }}">
+                            <option value="">Select a match</option>
+                            {% for match in unmatched.matches %}
+                                <option value="{{ match.id }}">{{ match.title }} by {{ match.artist }} ({{ match.album }})</option>
+                            {% endfor %}
+                        </select>
+                    </td>
+                    <td>
+                        <button type="button" onclick="handleLinkButtonClick(this.closest('tr'))">Link</button>
+                    </td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</body>
+</html>

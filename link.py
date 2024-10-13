@@ -25,6 +25,11 @@ def find_and_insert_matches():
     conn = sqlite3.connect('owntone.db')
     cursor = conn.cursor()
     
+    cursor.execute('''
+        DELETE FROM track_links
+    ''')
+    conn.commit()
+
     # Join the itunes_tracks and tracks tables based on track title and artist
     cursor.execute('''
         INSERT INTO track_links (itunes_track_id, owntone_track_id)

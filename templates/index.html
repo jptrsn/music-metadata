@@ -51,23 +51,26 @@
     <table>
         <thead>
             <tr>
-                <th>iTunes Track Name</th>
+                <!-- <th>iTunes Track Name</th>
                 <th>iTunes Artist</th>
-                <th>iTunes Album</th>
+                <th>iTunes Album</th> -->
                 <th>Owntone Track Name</th>
                 <th>Owntone Artist</th>
                 <th>Owntone Album</th>
+                <th>Rating (it/ot)</th>
             </tr>
         </thead>
         <tbody>
             {% for match in matches %}
             <tr>
-                <td>{{ match['itunes_track_name'] }}</td>
+                <!-- <td>{{ match['itunes_track_name'] }}</td>
                 <td>{{ match['itunes_artist'] }}</td>
-                <td>{{ match['itunes_album'] }}</td>
+                <td>{{ match['itunes_album'] }}</td> -->
                 <td>{{ match['owntone_track_name'] }}</td>
                 <td>{{ match['owntone_artist'] }}</td>
                 <td>{{ match['owntone_album'] }}</td>
+                <td>{{ match['itunes_rating'] }} / {{ match['owntone_rating'] }}</td>
+                
             </tr>
             {% else %}
             <tr>
