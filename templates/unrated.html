@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Unrated Tracks</title>
+    <style>
+        /* Styles for the table */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        /* Style for table rows */
+        tr {
+            transition: background-color 0.3s; /* Optional: smooth background color transition */
+        }
+
+        /* Highlight alternate rows with light grey background */
+        tr:nth-child(even) {
+            background-color: #DDD; /* Light grey background */
+        }
+
+        /* Optional: style for table headers */
+        th {
+            background-color: #AAA; /* Slightly darker grey for header */
+            padding: 10px;
+            text-align: left;
+        }
+
+        /* Optional: style for table cells */
+        td {
+            padding: 10px;
+            border: 1px solid #ddd; /* Light border for table cells */
+        }
+    </style>
+    <script>
+        function playTrack(trackId) {
+            // Make a POST request to the play_track route
+            fetch('/play_track', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ track_id: trackId })
+            })
+            .then(response => {
+                if (response.ok) {
+                    console.log('Track is now playing.');
+                } else {
+                    return response.json().then(errorData => {
+                        throw new Error(errorData.error || 'An error occurred');
+                    });
+                }
+            })
+            .catch(error => {
+                alert('Error: ' + error.message);
+            });
+        }
+    </script>
+</head>
+<body>
+    <h1>Unrated Tracks</h1>
+    <form method="POST" action="{{ url_for('unrated') }}">
+        <button type="submit">Update Ratings</button>
+        <table>
+            <thead>
+                <tr>
+                    <th>Id</th>
+                    <th>Track Title</th>
+                    <th>Artist</th>
+                    <th>Album</th>
+                    <th>Rating (0-5 Stars)</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for track in unrated %}
+                    <tr>
+                        <td>{{ track.id }}</td>
+                        <td>{{ track.title }}</td>
+                        <td>{{ track.artist }}</td>
+                        <td>{{ track.album }}</td>
+                        <td>
+                            <input type="hidden" name="track_id" value="{{ track.id }}">
+                            <select name="updated_rating_{{ track.id }}">
+                                <option value="0">0</option>
+                                <option value="20">1 Star</option>
+                                <option value="40">2 Stars</option>
+                                <option value="60">3 Stars</option>
+                                <option value="80">4 Stars</option>
+                                <option value="100">5 Stars</option>
+                            </select>
+                        </td>
+                        <td>
+                            <button type="button" onclick="playTrack({{ track.id }})">Play</button>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </form>
+</body>
+</html>

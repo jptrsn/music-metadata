@@ -1,7 +1,8 @@
-from flask import Flask, render_template, request, redirect, url_for
+from flask import Flask, render_template, request, redirect, url_for, jsonify
 import sqlite3
-import os
+import requests
 from metadata import find_incorrect_tracks, mark_track_as_fixed  # Import the function from your metadata script
+import time
 
 app = Flask(__name__)
 DATABASE = 'owntone.db'
@@ -141,6 +142,88 @@ def mark_album_fixed():
     
     return redirect(url_for('incorrect_tracks'))
 
+# Function to sort the array by artist_sort and title_sort
+def sort_tracks_by_artist_and_title(tracks):
+    return sorted(tracks, key=lambda x: (x['artist_sort'].lower(), x['album_sort'].lower(), x['title_sort']))
+
+@app.route('/unrated', methods=['GET', 'POST'])
+def unrated():
+    if request.method == 'POST':
+        # Iterate through the submitted form data
+        conn = get_db_connection()
+        cursor = conn.cursor()
+
+        track_updates = []
+
+        for key, value in request.form.items():
+            # Check if the key corresponds to a track rating
+            if key.startswith('updated_rating_'):
+                track_id = int(key.split('_')[2])  # Extract the track ID from the key
+                updated_rating = int(value) if value.isdigit() else 0  # Get the selected rating
+
+                # Only update if the rating is greater than zero
+                if int(updated_rating) > 0:
+                    cursor.execute('''
+                        UPDATE tracks
+                        SET rating = ?
+                        WHERE id = ?
+                    ''', (updated_rating, track_id))
+
+                    # Prepare the update for the API request
+                    track_updates.append({
+                        "id": track_id,
+                        "rating": updated_rating
+                    })
+
+                    # Mark the track as fixed
+                    cursor.execute('''
+                        INSERT OR IGNORE INTO fixed_tracks (track_id)
+                        VALUES (?)
+                    ''', (track_id,))
+
+        conn.commit()
+
+        # Make a PUT request to update all ratings via the API
+        if track_updates:
+            api_url = "http://192.168.1.13:3689/api/library/tracks"
+            payload = {"tracks": track_updates}
+            
+            # Send the PUT request
+            try:
+                response = requests.put(api_url, json=payload)
+                response.raise_for_status()  # Raise an error for bad responses
+            except requests.exceptions.RequestException as e:
+                print(f"API request failed: {e}")
+
+            time.sleep(1)
+
+        conn.close()
+        
+        return redirect(url_for('unrated'))
+
+    # GET request handling
+    # GET request handling
+    unrated = []
+    response = requests.get("http://192.168.1.13:3689/api/search?type=tracks&expression=rating=0&media_kind=music")
+    
+    if response.status_code == 200:
+        data = response.json()  # Parse JSON response
+        unrated = data.get("tracks", {}).get("items", [])  # Get items from the response
+        unrated = sort_tracks_by_artist_and_title(unrated)
+    else:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute('''
+            SELECT t.id, t.title, t.artist, t.album
+            FROM tracks t
+            WHERE t.rating = 0
+            ORDER BY t.artist, t.album
+        ''')
+        unrated = cursor.fetchall()
+        conn.close()
+
+    return render_template('unrated.html', unrated=unrated)
+
 # Function to search tracks by song name and artist
 def search_tracks(song_name, artist_name):
     conn = sqlite3.connect('owntone.db')
@@ -243,6 +326,71 @@ def link_tracks_route():
 
     return redirect(url_for('unmatched_tracks'))
 
+
+@app.route('/play_track', methods=['POST'])
+def play_track():
+    # Get the track ID from the request JSON
+    track_id = request.json.get('track_id')
+
+    # Check if track_id is provided
+    if not track_id:
+        return jsonify({"error": "Track ID is required"}), 400
+
+    # Base URL for adding a track to the queue
+    base_url = "http://192.168.1.13:3689/api/queue/items/add"
+    
+    # Define the parameters
+    params = {
+        'uris': f'library:track:{track_id}',  # Use the track_id provided as an argument
+        'clear': 'true',                     # Clear the current queue before adding
+        'playback': 'start'                  # Start playback immediately
+    }
+
+    # Make the PUT request to the OwnTone API
+    try:
+        # Make the POST request with URL parameters
+        response = requests.post(base_url, params=params)
+
+        # Check if the request was successful
+        if response.status_code == 200:
+            return jsonify({"message": "Track is now playing."}), 200
+        else:
+            return jsonify({"error": "Failed to play track", "details": response.text}), response.status_code
+
+    except requests.exceptions.RequestException as e:
+        return jsonify({"error": "An error occurred while connecting to the OwnTone server", "details": str(e)}), 500
+
+@app.route('/itunes_tracks', methods=['GET', 'POST'])
+def itunes_tracks():
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    # Initial query
+    query = 'SELECT * FROM itunes_tracks WHERE 1=1'
+    params = []
+
+    # Filtering based on user input
+    if request.method == 'POST':
+        artist = request.form.get('artist')
+        album = request.form.get('album')
+        genre = request.form.get('genre')
+
+        if artist:
+            query += ' AND "Artist" LIKE ?'
+            params.append(f'%{artist}%')
+        if album:
+            query += ' AND "Album" LIKE ?'
+            params.append(f'%{album}%')
+        if genre:
+            query += ' AND "Genre" LIKE ?'
+            params.append(f'%{genre}%')
+
+    # Execute the query
+    cursor.execute(query, params)
+    tracks = cursor.fetchall()
+    conn.close()
+
+    return render_template('itunes_tracks.html', tracks=tracks)
 
 if __name__ == '__main__':
     app.run(port=8000, debug=True)

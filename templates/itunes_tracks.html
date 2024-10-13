@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>iTunes Tracks</title>
+    <style>
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        tr:hover {
+            background-color: #ddd;
+        }
+    </style>
+</head>
+<body>
+    <h1>iTunes Tracks</h1>
+    <form method="POST">
+        <label for="artist">Artist:</label>
+        <input type="text" id="artist" name="artist">
+        <label for="album">Album:</label>
+        <input type="text" id="album" name="album">
+        <label for="genre">Genre:</label>
+        <input type="text" id="genre" name="genre">
+        <button type="submit">Filter</button>
+    </form>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Track ID</th>
+                <th>Name</th>
+                <th>Artist</th>
+                <th>Album</th>
+                <th>Genre</th>
+                <th>Play Count</th>
+                <th>Rating</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for track in tracks %}
+                <tr>
+                    <td>{{ track['track_id'] }}</td>
+                    <td>{{ track['Name'] }}</td>
+                    <td>{{ track['Artist'] }}</td>
+                    <td>{{ track['Album'] }}</td>
+                    <td>{{ track['Genre'] }}</td>
+                    <td>{{ track['Play Count'] }}</td>
+                    <td>{{ track['Rating'] }}</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</body>
+</html>
